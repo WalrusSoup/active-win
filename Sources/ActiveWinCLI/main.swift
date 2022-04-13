@@ -1,5 +1,44 @@
 import AppKit
 
+extension NSImage {
+    var height: CGFloat {
+        return self.size.height
+    }
+    
+    var width: CGFloat {
+        return self.size.width
+    }
+
+    func copy(size: NSSize) -> NSImage? {
+        let frame = NSMakeRect(0, 0, size.width, size.height)
+        guard let rep = self.bestRepresentation(for: frame, context: nil, hints: nil) else {
+            return nil
+        }
+        let img = NSImage(size: size)
+        img.lockFocus()
+        defer { img.unlockFocus() }
+        if rep.draw(in: frame) {
+            return img
+        }
+        return nil
+    }
+
+    func resizeWhileMaintainingAspectRatioToSize(size: NSSize) -> NSImage? {
+        let newSize: NSSize
+        
+        let widthRatio  = size.width / self.width
+        let heightRatio = size.height / self.height
+        
+        if widthRatio > heightRatio {
+            newSize = NSSize(width: floor(self.width * widthRatio), height: floor(self.height * widthRatio))
+        } else {
+            newSize = NSSize(width: floor(self.width * heightRatio), height: floor(self.height * heightRatio))
+        }
+        
+        return self.copy(size: newSize)
+    }
+}
+
 func getActiveBrowserTabURLAppleScriptCommand(_ appId: String) -> String? {
 	switch appId {
 	case "com.google.Chrome", "com.google.Chrome.beta", "com.google.Chrome.dev", "com.google.Chrome.canary", "com.brave.Browser", "com.brave.Browser.beta", "com.brave.Browser.nightly", "com.microsoft.edgemac", "com.microsoft.edgemac.Beta", "com.microsoft.edgemac.Dev", "com.microsoft.edgemac.Canary", "com.mighty.app", "com.ghostbrowser.gb1", "com.bookry.wavebox", "com.pushplaylabs.sidekick", "com.operasoftware.Opera",  "com.operasoftware.OperaNext", "com.operasoftware.OperaDeveloper", "com.vivaldi.Vivaldi":
@@ -14,6 +53,25 @@ func getActiveBrowserTabURLAppleScriptCommand(_ appId: String) -> String? {
 func exitWithoutResult() -> Never {
 	print("null")
 	exit(0)
+}
+
+@available(macOS 10.12, *)
+func writeApplicationIconToDisk(app: NSRunningApplication) -> String? {
+	let tmpDirectory = FileManager.default.temporaryDirectory.appendingPathComponent("activewin").path;
+	try! FileManager.default.createDirectory(atPath: tmpDirectory, withIntermediateDirectories: true, attributes: nil)
+	let tmpPath = tmpDirectory + "/" + (app.bundleIdentifier ?? UUID().uuidString) + ".png"
+
+	// Return early if this icon already exists on disk at this location
+	if FileManager.default.fileExists(atPath: tmpPath) {
+		return tmpPath
+	}
+
+	let resizedImage = app.icon!.resizeWhileMaintainingAspectRatioToSize(size: NSSize(width: 48, height: 48))
+	let rep = NSBitmapImageRep(data: resizedImage!.tiffRepresentation!)
+	let icon = rep?.representation(using: NSBitmapImageRep.FileType.png, properties: [.compressionFactor : 0.8])
+	try! icon?.write(to: URL(fileURLWithPath: tmpPath))
+
+	return tmpPath
 }
 
 let disableScreenRecordingPermission = CommandLine.arguments.contains("--no-screen-recording-permission")
@@ -66,6 +124,13 @@ for window in windows {
 
 	let windowTitle = disableScreenRecordingPermission ? "" : window[kCGWindowName as String] as? String ?? ""
 
+	var applicationIcon = "";
+
+	if #available(macOS 10.12, *) {
+		applicationIcon = writeApplicationIconToDisk(app: app) ?? ""
+	}
+	
+
 	var output: [String: Any] = [
 		"title": windowTitle,
 		"id": window[kCGWindowNumber as String] as! Int, // Documented to always exist.
@@ -81,6 +146,7 @@ for window in windows {
 			"bundleId": app.bundleIdentifier ?? "", // I don't think this could happen, but we also don't want to crash.
 			"path": app.bundleURL?.path ?? "" // I don't think this could happen, but we also don't want to crash.
 		],
+		"icon": applicationIcon,
 		"memoryUsage": window[kCGWindowMemoryUsage as String] as? Int ?? 0
 	]
 

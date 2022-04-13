@@ -16,7 +16,7 @@
 	"scripts": {
 		"test": "xo && npm run build && ava && tsd",
 		"test-ci": "xo && tsd",
-		"build": "swift build --configuration=release --arch arm64 --arch x86_64 && mv .build/apple/Products/Release/active-win main",
+		"build": "swift build --configuration=release --arch arm64 --arch x86_64 && mv .build/apple/Products/Release/active-win main && chmod +x main",
 		"prepare": "npm run build"
 	},
 	"files": [
