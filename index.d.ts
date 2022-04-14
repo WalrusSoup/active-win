@@ -59,14 +59,14 @@ declare namespace activeWindow {
 		Memory usage by the window.
 		*/
 		memoryUsage: number;
-        /**
-         * Path to the PNG of the active window icon
-         **/
-        icon: string;
-        /**
-         * The platform of the currently running operating system
-         **/
-        platform: string;
+		/**
+		 * Path to the PNG of the active window icon
+		 **/
+		icon?: string;
+		/**
+		 * The platform of the currently running operating system
+		 **/
+		platform: string;
 	}
 
 	interface MacOSOwner extends BaseOwner {
