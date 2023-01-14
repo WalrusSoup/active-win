@@ -4,7 +4,7 @@ extension NSImage {
     var height: CGFloat {
         return self.size.height
     }
-    
+
     var width: CGFloat {
         return self.size.width
     }
@@ -14,7 +14,7 @@ extension NSImage {
         guard let rep = self.bestRepresentation(for: frame, context: nil, hints: nil) else {
             return nil
         }
-        let img = NSImage(size: size)t
+        let img = NSImage(size: size)
         img.lockFocus()
         defer { img.unlockFocus() }
         if rep.draw(in: frame) {
@@ -25,16 +25,16 @@ extension NSImage {
 
     func resizeWhileMaintainingAspectRatioToSize(size: NSSize) -> NSImage? {
         let newSize: NSSize
-        
+
         let widthRatio  = size.width / self.width
         let heightRatio = size.height / self.height
-        
+
         if widthRatio > heightRatio {
             newSize = NSSize(width: floor(self.width * widthRatio), height: floor(self.height * widthRatio))
         } else {
             newSize = NSSize(width: floor(self.width * heightRatio), height: floor(self.height * heightRatio))
         }
-        
+
         return self.copy(size: newSize)
     }
 }
@@ -129,7 +129,7 @@ for window in windows {
 	if #available(macOS 10.12, *) {
 		applicationIcon = writeApplicationIconToDisk(app: app) ?? ""
 	}
-	
+
 
 	var output: [String: Any] = [
 		"title": windowTitle,
