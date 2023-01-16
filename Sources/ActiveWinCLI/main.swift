@@ -4,7 +4,7 @@ extension NSImage {
     var height: CGFloat {
         return self.size.height
     }
-    
+
     var width: CGFloat {
         return self.size.width
     }
@@ -25,16 +25,16 @@ extension NSImage {
 
     func resizeWhileMaintainingAspectRatioToSize(size: NSSize) -> NSImage? {
         let newSize: NSSize
-        
+
         let widthRatio  = size.width / self.width
         let heightRatio = size.height / self.height
-        
+
         if widthRatio > heightRatio {
             newSize = NSSize(width: floor(self.width * widthRatio), height: floor(self.height * widthRatio))
         } else {
             newSize = NSSize(width: floor(self.width * heightRatio), height: floor(self.height * heightRatio))
         }
-        
+
         return self.copy(size: newSize)
     }
 }
@@ -42,9 +42,9 @@ extension NSImage {
 func getActiveBrowserTabURLAppleScriptCommand(_ appId: String) -> String? {
 	switch appId {
 	case "com.google.Chrome", "com.google.Chrome.beta", "com.google.Chrome.dev", "com.google.Chrome.canary", "com.brave.Browser", "com.brave.Browser.beta", "com.brave.Browser.nightly", "com.microsoft.edgemac", "com.microsoft.edgemac.Beta", "com.microsoft.edgemac.Dev", "com.microsoft.edgemac.Canary", "com.mighty.app", "com.ghostbrowser.gb1", "com.bookry.wavebox", "com.pushplaylabs.sidekick", "com.operasoftware.Opera",  "com.operasoftware.OperaNext", "com.operasoftware.OperaDeveloper", "com.vivaldi.Vivaldi":
-		return "tell app id \"\(appId)\" to get the URL of active tab of front window"
+		return "tell app id \"\(appId)\" to get the URL of active tab of front window to set visible to false"
 	case "com.apple.Safari", "com.apple.SafariTechnologyPreview":
-		return "tell app id \"\(appId)\" to get URL of front document"
+		return "tell app id \"\(appId)\" to get URL of front document to set visible to false"
 	default:
 		return nil
 	}
@@ -82,17 +82,17 @@ if !AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDict
 	exit(1)
 }
 
+let frontmostAppPID = NSWorkspace.shared.frontmostApplication!.processIdentifier
+let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as! [[String: Any]]
+
 // Show screen recording permission prompt if needed. Required to get the complete window title.
-if !disableScreenRecordingPermission && !hasScreenRecordingPermission() {
+if
+	let firstWindow = windows.first,
+	let windowNumber = firstWindow[kCGWindowNumber as String] as? CGWindowID,
+	CGWindowListCreateImage(.null, .optionIncludingWindow, windowNumber, [.boundsIgnoreFraming, .bestResolution]) == nil
+{
 	print("active-win requires the screen recording permission in “System Preferences › Security & Privacy › Privacy › Screen Recording”.")
 	exit(1)
-}
-
-guard
-	let frontmostAppPID = NSWorkspace.shared.frontmostApplication?.processIdentifier,
-	let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]
-else {
-	exitWithoutResult()
 }
 
 for window in windows {
@@ -129,7 +129,7 @@ for window in windows {
 	if #available(macOS 10.12, *) {
 		applicationIcon = writeApplicationIconToDisk(app: app) ?? ""
 	}
-	
+
 
 	var output: [String: Any] = [
 		"title": windowTitle,
